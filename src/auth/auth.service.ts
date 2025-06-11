@@ -86,13 +86,12 @@ export class AuthService {
         refreshToken: token?.refreshToken ? 'Present' : 'Missing',
         createdAt: token?.createdAt,
         expiresIn: token?.expiresIn,
-        daysUntilRefreshTokenExpires: token
-          ? Math.floor(
-              (14 * 24 * 60 * 60 * 1000 -
-                (Date.now() - token.createdAt.getTime())) /
-                (24 * 60 * 60 * 1000),
-            )
+        accessTokenExpiresAt: token
+          ? new Date(token.createdAt.getTime() + token.expiresIn * 1000)
           : 'N/A',
+        isExpired: token
+          ? Date.now() >= token.createdAt.getTime() + token.expiresIn * 1000
+          : true,
       });
 
       if (!token) {
@@ -104,11 +103,9 @@ export class AuthService {
       const expirationTime =
         new Date(token.createdAt).getTime() + token.expiresIn * 1000;
 
-      if (
-        Date.now() >= expirationTime - 60000 ||
-        Date.now() >= expirationTime
-      ) {
-        console.log('Access token expired or about to expire, refreshing...');
+      // Só faz refresh se o token realmente expirou
+      if (Date.now() >= expirationTime) {
+        console.log('Access token expired, refreshing...');
 
         const params: URLSearchParams = new URLSearchParams({
           grant_type: 'refresh_token',
@@ -148,14 +145,28 @@ export class AuthService {
             refreshError.response?.data || refreshError,
           );
 
-          // Se o refresh token expirou ou é inválido, precisamos reautenticar
+          // Tratamento específico para diferentes erros do Zoho
           if (refreshError.response?.data?.error === 'invalid_grant') {
             console.log(
-              'Refresh token expired. You need to authenticate again by visiting /auth/zoho',
+              'Refresh token is invalid or has been revoked. You need to authenticate again by visiting /auth/zoho',
             );
             throw new Error(
-              'Refresh token expired. Please visit /auth/zoho to authenticate again.',
+              'Refresh token is invalid or has been revoked. Please visit /auth/zoho to authenticate again.',
             );
+          } else if (refreshError.response?.data?.error === 'Access Denied') {
+            console.log(
+              'Rate limit exceeded. Too many token requests in 10 minutes. Waiting before retrying...',
+            );
+            throw new Error(
+              'Too many token requests. Please try again in a few minutes.',
+            );
+          } else if (
+            refreshError.response?.data?.error === 'INVALID_OAUTHTOKEN'
+          ) {
+            console.log(
+              'Invalid access token. This might happen if we have more than 15 active tokens.',
+            );
+            throw new Error('Invalid access token. Please try again.');
           }
 
           throw refreshError;

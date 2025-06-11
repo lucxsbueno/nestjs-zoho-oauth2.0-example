@@ -11,10 +11,13 @@ export class TokenService {
 
       // Se não tiver refresh_token na resposta, busca o último refresh token válido
       let finalRefreshToken = refresh_token;
+
       if (!finalRefreshToken) {
         const latestToken = await this.getLatestToken();
+
         if (latestToken) {
           finalRefreshToken = latestToken.refreshToken;
+
           console.log(
             'Using existing refresh token from:',
             latestToken.createdAt,

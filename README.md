@@ -1,98 +1,286 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Zoho Integration
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
-
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Integration with Zoho CRM API. This project provides an interface to interact with Zoho CRM, allowing contact search, email account management, and other CRM functionalities.
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+This project implements a robust integration with Zoho CRM, offering:
 
-## Project setup
+- OAuth2 authentication with Zoho
+- Automatic access token management
+- Secure token storage in database
+- API error and rate limit handling
 
-```bash
-$ npm install
+## Project Structure
+
+```
+src/
+├── auth/
+│   ├── auth.controller.ts    # Authentication controller
+│   ├── auth.service.ts       # Authentication service
+│   ├── auth.module.ts        # Authentication module
+│   └── token.service.ts      # Token management service
+├── zoho/
+│   ├── zoho.controller.ts    # Zoho API controller
+│   ├── zoho.service.ts       # Zoho API service
+│   └── zoho.module.ts        # Zoho module
+├── prisma/
+│   └── schema.prisma         # Database schema
+└── app.module.ts             # Main application module
 ```
 
-## Compile and run the project
+## Components
 
-```bash
-# development
-$ npm run start
+### Auth Module (`src/auth/auth.module.ts`)
 
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+```typescript
+@Module({
+  controllers: [AuthController],
+  providers: [AuthService, TokenService, PrismaService],
+  exports: [AuthService],
+})
 ```
 
-## Run tests
+- Manages all authentication
+- Exports `AuthService` for use by other modules
+- Uses `TokenService` for token management
+- Uses `PrismaService` for database operations
 
-```bash
-# unit tests
-$ npm run test
+### Auth Controller (`src/auth/auth.controller.ts`)
 
-# e2e tests
-$ npm run test:e2e
+```typescript
+@Controller('auth')
+export class AuthController {
+  @Get('zoho')
+  redirectToZoho() {
+    return this.authService.getAuthUrl();
+  }
 
-# test coverage
-$ npm run test:cov
+  @Get('callback')
+  async handleCallback(@Query('code') code: string) {
+    return await this.authService.exchangeCodeForToken(code);
+  }
+}
 ```
 
-## Deployment
+- Endpoint `/auth/zoho`: Returns Zoho authentication URL
+- Endpoint `/auth/callback`: Receives authorization code from Zoho
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+### Auth Service (`src/auth/auth.service.ts`)
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+```typescript
+@Injectable()
+export class AuthService {
+  getAuthUrl(): string {
+    // Generates authentication URL with required scopes
+  }
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+  async exchangeCodeForToken(code: string) {
+    // Exchanges code for access token and refresh token
+  }
+
+  async getValidAccessToken(): Promise<string> {
+    // Gets a valid access token, refreshing if necessary
+  }
+}
 ```
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+- Manages entire authentication flow
+- Generates authentication URLs
+- Exchanges codes for tokens
+- Manages token refresh
 
-## Resources
+### Token Service (`src/auth/token.service.ts`)
 
-Check out a few resources that may come in handy when working with NestJS:
+```typescript
+@Injectable()
+export class TokenService {
+  async saveToken(data: any) {
+    // Saves token to database
+  }
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+  async getLatestToken() {
+    // Gets the most recent token
+  }
+}
+```
 
-## Support
+- Manages token storage
+- Saves tokens to database
+- Retrieves tokens when needed
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+### Zoho Module (`src/zoho/zoho.module.ts`)
 
-## Stay in touch
+```typescript
+@Module({
+  imports: [AuthModule],
+  controllers: [ZohoController],
+  providers: [ZohoService],
+})
+```
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+- Manages Zoho API integration
+- Imports `AuthModule` for authentication
+- Provides API endpoints
 
-## License
+### Zoho Controller (`src/zoho/zoho.controller.ts`)
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+```typescript
+@Controller('crm')
+export class ZohoController {
+  @Get('search-contact')
+  async searchContact(@Query('email') email: string) {
+    return this.zohoService.searchContactByEmail(email);
+  }
+
+  @Get('mails')
+  async getAllMailAccounts() {
+    return this.zohoService.getAllMailAccounts();
+  }
+}
+```
+
+- Endpoints for Zoho CRM interaction
+- Uses `ZohoService` for API requests
+
+### Zoho Service (`src/zoho/zoho.service.ts`)
+
+```typescript
+@Injectable()
+export class ZohoService {
+  async searchContactByEmail(email: string) {
+    // Searches contact by email
+  }
+
+  async getAllMailAccounts() {
+    // Gets email accounts
+  }
+}
+```
+
+- Makes requests to Zoho API
+- Uses `AuthService` to get valid tokens
+
+### Prisma Schema (`prisma/schema.prisma`)
+
+```prisma
+model Token {
+  id           Int      @id @default(autoincrement())
+  accessToken  String
+  refreshToken String
+  expiresIn    Int
+  createdAt    DateTime @default(now())
+}
+```
+
+- Defines database structure
+- Stores access tokens
+
+## Flow
+
+1. User accesses `/auth/zoho`
+2. Redirected to Zoho login
+3. After login, Zoho redirects to `/auth/callback` with code
+4. System exchanges code for tokens
+5. Tokens are saved to database
+6. When making API request:
+   - Checks if access token is valid
+   - If expired, uses refresh token to get new one
+   - Makes request with valid token
+
+## Token Management
+
+### Access Token
+
+- Valid for 1 hour
+- Maximum 15 active tokens per refresh token
+- Maximum 10 tokens generated in 10 minutes
+
+### Refresh Token
+
+- Permanent until revoked
+- Maximum 20 refresh tokens per user
+- Does not expire automatically
+
+### System Behavior
+
+- Only refreshes when access token actually expires
+- Maintains existing refresh token
+- Avoids unnecessary requests
+
+## Error Handling
+
+- `invalid_grant`: Invalid/revoked refresh token
+- `Access Denied`: Too many requests in 10 minutes
+- `INVALID_OAUTHTOKEN`: Invalid token (more than 15 active tokens)
+
+## Configuration
+
+Create a `.env` file in the project root with the following variables:
+
+```env
+DATABASE_URL="file:./dev.db"
+ZOHO_CLIENT_ID="your_client_id"
+ZOHO_CLIENT_SECRET="your_client_secret"
+ZOHO_REDIRECT_URI="http://localhost:3333/auth/callback"
+ZOHO_SCOPE="ZohoCRM.modules.ALL,ZohoCRM.settings.ALL"
+ZOHO_API_ACCOUNT="https://accounts.zoho.com"
+```
+
+## Installation
+
+```bash
+# Install dependencies
+npm install
+
+# Configure database
+npx prisma generate
+npx prisma db push
+
+# Start application
+npm run start:dev
+```
+
+## Usage
+
+1. Access `http://localhost:3333/auth/zoho`
+2. Login to Zoho
+3. Authorize the application
+4. Use the API endpoints:
+   - `GET /crm/search-contact?email=example@email.com`
+   - `GET /crm/mails`
+
+## Build and Deployment
+
+### Development
+
+```bash
+# Start development server
+npm run start:dev
+
+# Watch mode
+npm run start:debug
+```
+
+### Production
+
+```bash
+# Build the application
+npm run build
+
+# Start production server
+npm run start:prod
+```
+
+### Environment Variables
+
+Make sure to set the following environment variables in production:
+
+- `DATABASE_URL`: Your production database URL
+- `ZOHO_CLIENT_ID`: Your Zoho client ID
+- `ZOHO_CLIENT_SECRET`: Your Zoho client secret
+- `ZOHO_REDIRECT_URI`: Your production callback URL
+- `ZOHO_SCOPE`: Required Zoho API scopes
+- `ZOHO_API_ACCOUNT`: Zoho API account URL
+
+Enjoy!

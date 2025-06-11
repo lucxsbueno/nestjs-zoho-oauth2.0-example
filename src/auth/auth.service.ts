@@ -148,7 +148,7 @@ export class AuthService {
           // Tratamento específico para diferentes erros do Zoho
           if (refreshError.response?.data?.error === 'invalid_grant') {
             console.log(
-              'Refresh token is invalid or has been revoked. You need to authenticate again by visiting /auth/zoho',
+              'Refresh token is invalid or has been revoked. You need to authenticate again by visiting /auth',
             );
             throw new Error(
               'Refresh token is invalid or has been revoked. Please visit /auth/zoho to authenticate again.',

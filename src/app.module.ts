@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { ZohoModule } from './zoho/zoho.module';
 import { ContactsModule } from './contacts/contacts.module';
+import { EmailsModule } from './emails/emails.module';
 
 @Module({
   imports: [
@@ -10,6 +11,7 @@ import { ContactsModule } from './contacts/contacts.module';
     AuthModule,
     ZohoModule,
     ContactsModule,
+    EmailsModule,
   ],
 })
 export class AppModule {}

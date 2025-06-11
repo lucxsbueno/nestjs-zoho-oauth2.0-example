@@ -15,8 +15,12 @@ export class ContactsController {
   constructor(private readonly contactsService: ContactsService) {}
 
   @Get('search')
-  async searchContact(@Query('email') email: string) {
-    return this.contactsService.searchContactByEmail(email);
+  async searchContact(
+    @Query('email') email: string,
+    @Query('name') name: string,
+    @Query('phone') phone: string,
+  ) {
+    return this.contactsService.searchContact(email, name, phone);
   }
 
   @Get(':id')

@@ -10,6 +10,8 @@ This project implements a robust integration with Zoho CRM, offering:
 - Automatic access token management
 - Secure token storage in database
 - API error and rate limit handling
+- Contact management
+- Email account management
 
 ## Project Structure
 
@@ -20,10 +22,14 @@ src/
 │   ├── auth.service.ts       # Authentication service
 │   ├── auth.module.ts        # Authentication module
 │   └── token.service.ts      # Token management service
-├── zoho/
-│   ├── zoho.controller.ts    # Zoho API controller
-│   ├── zoho.service.ts       # Zoho API service
-│   └── zoho.module.ts        # Zoho module
+├── contacts/
+│   ├── contacts.controller.ts # Contacts controller
+│   ├── contacts.service.ts    # Contacts service
+│   └── contacts.module.ts     # Contacts module
+├── emails/
+│   ├── emails.controller.ts   # Emails controller
+│   ├── emails.service.ts      # Emails service
+│   └── emails.module.ts       # Emails module
 ├── prisma/
 │   └── schema.prisma         # Database schema
 └── app.module.ts             # Main application module
@@ -109,57 +115,63 @@ export class TokenService {
 - Saves tokens to database
 - Retrieves tokens when needed
 
-### Zoho Module (`src/zoho/zoho.module.ts`)
+### Contacts Module (`src/contacts/contacts.module.ts`)
 
 ```typescript
 @Module({
   imports: [AuthModule],
-  controllers: [ZohoController],
-  providers: [ZohoService],
+  controllers: [ContactsController],
+  providers: [ContactsService],
 })
 ```
 
-- Manages Zoho API integration
+- Manages contact-related operations
 - Imports `AuthModule` for authentication
-- Provides API endpoints
+- Provides contact management endpoints
 
-### Zoho Controller (`src/zoho/zoho.controller.ts`)
+### Contacts Controller (`src/contacts/contacts.controller.ts`)
 
 ```typescript
-@Controller('crm')
-export class ZohoController {
-  @Get('search-contact')
+@Controller('contacts')
+export class ContactsController {
+  @Get('search')
   async searchContact(@Query('email') email: string) {
-    return this.zohoService.searchContactByEmail(email);
-  }
-
-  @Get('mails')
-  async getAllMailAccounts() {
-    return this.zohoService.getAllMailAccounts();
+    return this.contactsService.searchContactByEmail(email);
   }
 }
 ```
 
-- Endpoints for Zoho CRM interaction
-- Uses `ZohoService` for API requests
+- Endpoints for contact management
+- Uses `ContactsService` for API requests
 
-### Zoho Service (`src/zoho/zoho.service.ts`)
+### Emails Module (`src/emails/emails.module.ts`)
 
 ```typescript
-@Injectable()
-export class ZohoService {
-  async searchContactByEmail(email: string) {
-    // Searches contact by email
-  }
+@Module({
+  imports: [AuthModule],
+  controllers: [EmailsController],
+  providers: [EmailsService],
+})
+```
 
+- Manages email account operations
+- Imports `AuthModule` for authentication
+- Provides email management endpoints
+
+### Emails Controller (`src/emails/emails.controller.ts`)
+
+```typescript
+@Controller('emails')
+export class EmailsController {
+  @Get('accounts')
   async getAllMailAccounts() {
-    // Gets email accounts
+    return this.emailsService.getAllMailAccounts();
   }
 }
 ```
 
-- Makes requests to Zoho API
-- Uses `AuthService` to get valid tokens
+- Endpoints for email account management
+- Uses `EmailsService` for API requests
 
 ### Prisma Schema (`prisma/schema.prisma`)
 
@@ -247,8 +259,8 @@ npm run start:dev
 2. Login to Zoho
 3. Authorize the application
 4. Use the API endpoints:
-   - `GET /crm/search-contact?email=example@email.com`
-   - `GET /crm/mails`
+   - `GET /contacts/search?email=example@email.com`
+   - `GET /emails/accounts`
 
 ## Build and Deployment
 
@@ -283,4 +295,14 @@ Make sure to set the following environment variables in production:
 - `ZOHO_SCOPE`: Required Zoho API scopes
 - `ZOHO_API_ACCOUNT`: Zoho API account URL
 
-Enjoy!
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add some amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

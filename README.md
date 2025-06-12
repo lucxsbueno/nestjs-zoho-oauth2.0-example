@@ -57,7 +57,7 @@ src/
 ```typescript
 @Controller('auth')
 export class AuthController {
-  @Get('zoho')
+  @Get('')
   redirectToZoho() {
     return this.authService.getAuthUrl();
   }
@@ -69,7 +69,7 @@ export class AuthController {
 }
 ```
 
-- Endpoint `/auth/zoho`: Returns Zoho authentication URL
+- Endpoint `/auth`: Returns Zoho authentication URL
 - Endpoint `/auth/callback`: Receives authorization code from Zoho
 
 ### Auth Service (`src/auth/auth.service.ts`)
